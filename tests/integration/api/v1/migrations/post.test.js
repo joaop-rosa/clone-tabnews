@@ -1,6 +1,10 @@
-const { database, cleanDatabase } = require("../helpers/database")
+import { cleanDatabase } from "../helpers/database"
+import orchestrator from "tests/orchestrator.js"
 
-beforeAll(cleanDatabase)
+beforeAll(async () => {
+  await orchestrator.waitForAllServices()
+  cleanDatabase()
+})
 
 test("POST to /api/v1/migrations should return 200", async () => {
   // First request
