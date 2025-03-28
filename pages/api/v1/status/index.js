@@ -30,6 +30,6 @@ async function getHandler(req, res) {
         pg_used_connections: parseInt(pgUsedConnections.rows[0].count),
       },
     },
-    getHandler: "Healthy",
+    status: "Healthy",
   })
 }
