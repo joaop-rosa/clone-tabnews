@@ -1,4 +1,4 @@
-const { methodNotAllowedError } = require("../helpers/errors")
+const { methodNotAllowedError } = require("../fixtures/errors")
 
 describe("PUT to /api/v1/migrations", () => {
   describe("Anonymous user", () => {

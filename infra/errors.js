@@ -52,3 +52,41 @@ export class MethodNotAllowedError extends Error {
     }
   }
 }
+
+export class ValidationError extends Error {
+  constructor({ cause, message, action }) {
+    super(message || "Ocorreu um erro de validação", { cause })
+    this.name = "ValidationError"
+    this.action =
+      action || "Verifique se o método utilizado foi correto para esse endpoint"
+    this.statusCode = 400
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    }
+  }
+}
+
+export class NotFoundError extends Error {
+  constructor({ cause, message, action }) {
+    super(message || "Não foi possível encontrar o recurso", { cause })
+    this.name = "NotFoundError"
+    this.action =
+      action || "Verifique se os parâmetros informados foram corretos"
+    this.statusCode = 404
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      action: this.action,
+      status_code: this.statusCode,
+    }
+  }
+}

@@ -1,9 +1,8 @@
-import { cleanDatabase } from "../helpers/database"
 import orchestrator from "tests/orchestrator.js"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
-  await cleanDatabase()
+  await orchestrator.cleanDatabase()
 })
 
 describe("GET to /api/v1/migrations", () => {

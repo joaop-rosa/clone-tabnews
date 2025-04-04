@@ -1,5 +1,5 @@
 import orchestrator from "tests/orchestrator.js"
-import { methodNotAllowedError } from "../helpers/errors"
+import { methodNotAllowedError } from "../fixtures/errors"
 
 beforeAll(async () => {
   await orchestrator.waitForAllServices()
