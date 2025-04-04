@@ -49,7 +49,7 @@ async function validateUniqueUsername(username) {
   })
 
   if (result.rowCount > 0) {
-    throw new NotFoundError({
+    throw new ValidationError({
       message: "O username informado já está sendo utilizado",
       action: "Informe outro username",
     })
