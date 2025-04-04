@@ -1,5 +1,5 @@
 import database from "infra/database"
-import { ValidationError } from "infra/errors"
+import { NotFoundError, ValidationError } from "infra/errors"
 
 async function runInsertQuery({ username, email, password }) {
   const result = await database.query({
@@ -49,11 +49,35 @@ async function validateUniqueUsername(username) {
   })
 
   if (result.rowCount > 0) {
-    throw new ValidationError({
+    throw new NotFoundError({
       message: "O username informado já está sendo utilizado",
       action: "Informe outro username",
     })
   }
+}
+
+async function runSelectQuery(username) {
+  const result = await database.query({
+    text: `SELECT
+            *
+          FROM
+            users
+          WHERE
+            LOWER(username) = LOWER($1)
+          LIMIT
+            1
+        ;`,
+    values: [username],
+  })
+
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message: "O username informado não foi encontrado",
+      action: "Verifique se o username informado foi correto",
+    })
+  }
+
+  return result.rows[0]
 }
 
 async function create(user) {
@@ -63,6 +87,11 @@ async function create(user) {
   return newUser
 }
 
-const user = { create }
+async function findOneByUsername(username) {
+  const userFound = await runSelectQuery(username)
+  return userFound
+}
+
+const user = { create, findOneByUsername }
 
 export default user
