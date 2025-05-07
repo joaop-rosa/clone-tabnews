@@ -54,35 +54,23 @@ describe("POST to /api/v1/users", () => {
       expect(incorrectPasswordMatch).toBe(false)
     })
     test("With duplicated 'email'", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+      const createdUser = await orchestrator.createUser()
+
+      const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "emailduplicado1",
-          email: "emailduplicado@gmail.com",
-          password: "senha123",
+          ...createdUser,
+          username: `${createdUser.username}2`,
+          email: createdUser.email.toUpperCase(),
         }),
       })
 
-      expect(response1.status).toBe(201)
+      expect(response.status).toBe(400)
 
-      const response2 = await fetch("http://localhost:3000/api/v1/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: "emailduplicado2",
-          email: "Emailduplicado@gmail.com",
-          password: "senha123",
-        }),
-      })
-
-      expect(response2.status).toBe(400)
-
-      const responseBody = await response2.json()
+      const responseBody = await response.json()
 
       expect(responseBody).toEqual({
         name: "ValidationError",
@@ -92,35 +80,23 @@ describe("POST to /api/v1/users", () => {
       })
     })
     test("With duplicated 'username'", async () => {
-      const response1 = await fetch("http://localhost:3000/api/v1/users", {
+      const createdUser = await orchestrator.createUser()
+
+      const response = await fetch("http://localhost:3000/api/v1/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: "joaoduplicado",
-          email: "joaoduplicado@gmail.com",
-          password: "senha123",
+          ...createdUser,
+          email: `${createdUser.email}2`,
+          username: createdUser.username.toUpperCase(),
         }),
       })
 
-      expect(response1.status).toBe(201)
+      expect(response.status).toBe(400)
 
-      const response2 = await fetch("http://localhost:3000/api/v1/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: "Joaoduplicado",
-          email: "joaoduplicado2@gmail.com",
-          password: "senha123",
-        }),
-      })
-
-      expect(response2.status).toBe(400)
-
-      const responseBody = await response2.json()
+      const responseBody = await response.json()
 
       expect(responseBody).toEqual({
         name: "ValidationError",
