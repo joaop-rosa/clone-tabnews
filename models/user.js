@@ -1,5 +1,6 @@
 import database from "infra/database"
 import { NotFoundError, ValidationError } from "infra/errors"
+import password from "./password"
 
 async function runInsertQuery({ username, email, password }) {
   const result = await database.query({
@@ -56,6 +57,11 @@ async function validateUniqueUsername(username) {
   }
 }
 
+async function hashPasswordInObject(userInputValues) {
+  const hashedPassword = await password.hash(userInputValues.password)
+  userInputValues.password = hashedPassword
+}
+
 async function runSelectQuery(username) {
   const result = await database.query({
     text: `SELECT
@@ -81,8 +87,10 @@ async function runSelectQuery(username) {
 }
 
 async function create(user) {
-  await validateUniqueEmail(user.email)
   await validateUniqueUsername(user.username)
+  await validateUniqueEmail(user.email)
+  await hashPasswordInObject(user)
+
   const newUser = await runInsertQuery(user)
   return newUser
 }
@@ -92,6 +100,51 @@ async function findOneByUsername(username) {
   return userFound
 }
 
-const user = { create, findOneByUsername }
+async function runUpdateQuery(userWithNewValues) {
+  const result = await database.query({
+    text: `UPDATE
+            users
+          SET
+            username = $2,
+            email = $3,
+            password = $4,
+            updated_at = timezone('utc', now())
+          WHERE
+            id = $1
+          RETURNING
+            *
+        ;`,
+    values: [
+      userWithNewValues.id,
+      userWithNewValues.username,
+      userWithNewValues.email,
+      userWithNewValues.password,
+    ],
+  })
+
+  return result.rows[0]
+}
+
+async function update(username, userInputValues) {
+  const currentUser = await findOneByUsername(username)
+
+  if ("username" in userInputValues) {
+    await validateUniqueUsername(userInputValues.username)
+  }
+
+  if ("email" in userInputValues) {
+    await validateUniqueEmail(userInputValues.email)
+  }
+
+  if ("password" in userInputValues) {
+    await hashPasswordInObject(userInputValues)
+  }
+
+  const userWithNewValues = { ...currentUser, ...userInputValues }
+  const updatedUser = await runUpdateQuery(userWithNewValues)
+  return updatedUser
+}
+
+const user = { create, findOneByUsername, update }
 
 export default user
