@@ -62,7 +62,7 @@ async function hashPasswordInObject(userInputValues) {
   userInputValues.password = hashedPassword
 }
 
-async function runSelectQuery(username) {
+async function runUsernameSelectQuery(username) {
   const result = await database.query({
     text: `SELECT
             *
@@ -86,6 +86,30 @@ async function runSelectQuery(username) {
   return result.rows[0]
 }
 
+async function runEmailSelectQuery(email) {
+  const result = await database.query({
+    text: `SELECT
+            *
+          FROM
+            users
+          WHERE
+            LOWER(email) = LOWER($1)
+          LIMIT
+            1
+        ;`,
+    values: [email],
+  })
+
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message: "O email informado não foi encontrado",
+      action: "Verifique se o email informado foi correto",
+    })
+  }
+
+  return result.rows[0]
+}
+
 async function create(user) {
   await validateUniqueUsername(user.username)
   await validateUniqueEmail(user.email)
@@ -96,7 +120,12 @@ async function create(user) {
 }
 
 async function findOneByUsername(username) {
-  const userFound = await runSelectQuery(username)
+  const userFound = await runUsernameSelectQuery(username)
+  return userFound
+}
+
+async function findOneByEmail(email) {
+  const userFound = await runEmailSelectQuery(email)
   return userFound
 }
 
@@ -145,6 +174,6 @@ async function update(username, userInputValues) {
   return updatedUser
 }
 
-const user = { create, findOneByUsername, update }
+const user = { create, findOneByUsername, update, findOneByEmail }
 
 export default user
