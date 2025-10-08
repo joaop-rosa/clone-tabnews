@@ -5,6 +5,8 @@ import {
   UnauthorizedError,
   ValidationError,
 } from "infra/errors"
+import * as cookie from "cookie"
+import session from "models/session"
 
 export function onNoMatchHandler(req, res) {
   const publicErrorObject = new MethodNotAllowedError()
@@ -25,4 +27,15 @@ export function onErrorHandler(error, req, res) {
   })
 
   res.status(error.statusCode).json(publicErrorObject)
+}
+
+export function setSessionCookie(sessionToken, response) {
+  const setCookie = cookie.serialize("session_id", sessionToken, {
+    path: "/",
+    maxAge: session.EXPIRATION_IN_MILISECONDS / 1000,
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+  })
+
+  response.setHeader("Set-Cookie", setCookie)
 }

@@ -86,6 +86,30 @@ async function runUsernameSelectQuery(username) {
   return result.rows[0]
 }
 
+async function runIdSelectQuery(id) {
+  const result = await database.query({
+    text: `SELECT
+            *
+          FROM
+            users
+          WHERE
+            id = $1
+          LIMIT
+            1
+        ;`,
+    values: [id],
+  })
+
+  if (result.rowCount === 0) {
+    throw new NotFoundError({
+      message: "O id informado não foi encontrado",
+      action: "Verifique se o id informado foi correto",
+    })
+  }
+
+  return result.rows[0]
+}
+
 async function runEmailSelectQuery(email) {
   const result = await database.query({
     text: `SELECT
@@ -121,6 +145,11 @@ async function create(user) {
 
 async function findOneByUsername(username) {
   const userFound = await runUsernameSelectQuery(username)
+  return userFound
+}
+
+async function findOneById(id) {
+  const userFound = await runIdSelectQuery(id)
   return userFound
 }
 
@@ -174,6 +203,6 @@ async function update(username, userInputValues) {
   return updatedUser
 }
 
-const user = { create, findOneByUsername, update, findOneByEmail }
+const user = { create, findOneById, findOneByUsername, update, findOneByEmail }
 
 export default user
