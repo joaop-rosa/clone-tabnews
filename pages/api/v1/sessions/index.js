@@ -1,4 +1,5 @@
 import {
+  clearSessionCookie,
   onErrorHandler,
   onNoMatchHandler,
   setSessionCookie,
@@ -10,6 +11,7 @@ import session from "models/session"
 const router = createRouter()
 
 router.post(postHandler)
+router.delete(deleteHandler)
 
 export default router.handler({
   onNoMatch: onNoMatchHandler,
@@ -29,4 +31,14 @@ async function postHandler(req, res) {
   setSessionCookie(newSession.token, res)
 
   return res.status(201).json(newSession)
+}
+
+async function deleteHandler(req, res) {
+  const sessionToken = req.cookies.session_id
+
+  const sessionObject = await session.getOneValidByToken(sessionToken)
+  const expiredSession = await session.expireById(sessionObject.id)
+
+  clearSessionCookie(res)
+  return res.status(200).json(expiredSession)
 }
