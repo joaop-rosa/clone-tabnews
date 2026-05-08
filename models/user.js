@@ -2,16 +2,16 @@ import database from "infra/database"
 import { NotFoundError, ValidationError } from "infra/errors"
 import password from "./password"
 
-async function runInsertQuery({ username, email, password }) {
+async function runInsertQuery({ username, email, password, features }) {
   const result = await database.query({
     text: `INSERT INTO
-            users (username, email, password)
+            users (username, email, password, features)
         VALUES
-            ($1, $2, $3)
+            ($1, $2, $3, $4)
         RETURNING
             *    
         ;`,
-    values: [username, email, password],
+    values: [username, email, password, features],
   })
 
   return result.rows[0]
@@ -138,9 +138,14 @@ async function create(user) {
   await validateUniqueUsername(user.username)
   await validateUniqueEmail(user.email)
   await hashPasswordInObject(user)
+  injectDefaultFeaturesInObject(user)
 
   const newUser = await runInsertQuery(user)
   return newUser
+
+  function injectDefaultFeaturesInObject(userInputValues) {
+    userInputValues.features = ["read:activation_token"]
+  }
 }
 
 async function findOneByUsername(username) {
@@ -203,6 +208,62 @@ async function update(username, userInputValues) {
   return updatedUser
 }
 
-const user = { create, findOneById, findOneByUsername, update, findOneByEmail }
+async function setFeatures(userId, features) {
+  const updatedUser = await runUpdateQuery(userId, features)
+  return updatedUser
+
+  async function runUpdateQuery(userId, features) {
+    const results = await database.query({
+      text: `
+       UPDATE
+         users
+       SET
+         features = $2,
+         updated_at = timezone('utc', now())
+       WHERE
+         id = $1
+       RETURNING
+         *
+       ;`,
+      values: [userId, features],
+    })
+
+    return results.rows[0]
+  }
+}
+
+async function addFeatures(userId, features) {
+  const updatedUser = await runUpdateQuery(userId, features)
+  return updatedUser
+
+  async function runUpdateQuery(userId, features) {
+    const results = await database.query({
+      text: `
+       UPDATE
+         users
+       SET
+         features = array_cat(features, $2),
+         updated_at = timezone('utc', now())
+       WHERE
+         id = $1
+       RETURNING
+         *
+       ;`,
+      values: [userId, features],
+    })
+
+    return results.rows[0]
+  }
+}
+
+const user = {
+  create,
+  findOneById,
+  findOneByUsername,
+  update,
+  findOneByEmail,
+  setFeatures,
+  addFeatures,
+}
 
 export default user

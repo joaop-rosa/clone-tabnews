@@ -16,8 +16,8 @@ export default function StatusPage() {
     const { dependencies } = data
 
     const percentage =
-      (dependencies.database.pg_used_connections /
-        dependencies.database.pg_max_connections) *
+      (dependencies.database.opened_connections /
+        dependencies.database.max_connections) *
       100
 
     if (percentage >= 80) {
@@ -61,8 +61,8 @@ export default function StatusPage() {
         <h2 className="has-text-weight-bold	">Conexões com o banco</h2>
         <progress
           class={`progress ${getConectionsColor()}`}
-          value={data.dependencies.database.pg_used_connections}
-          max={data.dependencies.database.pg_max_connections}
+          value={data.dependencies.database.opened_connections}
+          max={data.dependencies.database.max_connections}
         />
       </>
     )
